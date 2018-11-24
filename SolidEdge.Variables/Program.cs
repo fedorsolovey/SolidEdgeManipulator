@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 using SolidEdgeFramework;
+using System.Security.Permissions;
+using System.IO;
 
 namespace SolidEdge.Part.Variables
 {
@@ -21,7 +23,10 @@ namespace SolidEdge.Part.Variables
 
     class Program
     {
-        static VariableList variableList;
+        private static VariableList variableList;
+        private static string workingPath = "input.txt"
+        private static string inputFilename = "input.txt";
+        private static string outputFilename = "output.txt";
 
         [STAThread]
         static void Main(string[] args)
@@ -71,8 +76,7 @@ namespace SolidEdge.Part.Variables
 
                 WriteToFile(@"\\Mac\Home\Downloads\Windows\output.txt", variableList);
 
-                var variableObject = ReadFile(@"\\Mac\Home\Downloads\Windows\input.txt");
-                dynamic variableFound = FindVariableByName(variableList, variableObject.name);
+                Run();
             }
             catch (System.Exception ex)
             {
@@ -83,10 +87,9 @@ namespace SolidEdge.Part.Variables
             }
             finally
             {
+                Console.ReadLine();
                 Console.WriteLine("Unregistering OleMessageFilter.");
                 OleMessageFilter.Revoke();
-
-                //Console.ReadLine();
             }
         }
 
@@ -186,10 +189,42 @@ namespace SolidEdge.Part.Variables
             return variable;
         }
 
+        public static void ReadLoop()
+        {
+            var variableObject = ReadFile(@"\\Mac\Home\Downloads\Windows\input.txt");
+            dynamic variableFound = FindVariableByName(variableList, variableObject.name);
+            variableFound.Value += 0.01;
+        }
+
+        [PermissionSet(SecurityAction.Demand, Name = "FullTrust")]
+        public static void Run()
+        {
+            // Create a new FileSystemWatcher and set its properties.
+            FileSystemWatcher watcher = new FileSystemWatcher();
+            watcher.Path = @"\\Mac\Home\Downloads\Windows\";
+            /* Watch for changes in LastAccess and LastWrite times, and
+               the renaming of files or directories. */
+            watcher.NotifyFilter = NotifyFilters.LastWrite;
+            // Only watch text files.
+            watcher.Filter = "input.txt";
+
+            // Add event handlers.
+            watcher.Changed += new FileSystemEventHandler(OnChanged);
+
+            // Begin watching.
+            watcher.EnableRaisingEvents = true;
+        }
+
+        // Define the event handlers.
+        private static void OnChanged(object source, FileSystemEventArgs e)
+        {
+            // TODO: 
+        }
+
         /// <summary>
         /// Connects to a running instance of Solid Edge.
         /// </summary>
-            public static SolidEdgeFramework.Application ConnectToSolidEdge()
+        public static SolidEdgeFramework.Application ConnectToSolidEdge()
         {
             return ConnectToSolidEdge(false);
         }
