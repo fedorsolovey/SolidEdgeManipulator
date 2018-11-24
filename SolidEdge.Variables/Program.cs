@@ -69,10 +69,10 @@ namespace SolidEdge.Part.Variables
                 variables = (SolidEdgeFramework.Variables)document.Variables;
                 variableList = VariableList(variables);
 
-                writeToFile(@"\\Mac\Home\Downloads\Windows\output.txt", variableList);
+                WriteToFile(@"\\Mac\Home\Downloads\Windows\output.txt", variableList);
 
-                var variableObject = readFile(@"\\Mac\Home\Downloads\Windows\input.txt");
-
+                var variableObject = ReadFile(@"\\Mac\Home\Downloads\Windows\input.txt");
+                dynamic variableFound = FindVariableByName(variableList, variableObject.name);
             }
             catch (System.Exception ex)
             {
@@ -140,7 +140,7 @@ namespace SolidEdge.Part.Variables
             //}
         }
 
-        public static void writeToFile(string path, VariableList variableList)
+        public static void WriteToFile(string path, VariableList variableList)
         {
             var tableVariables = new List<VariableObject>();
             dynamic variableListItem = null;
@@ -161,17 +161,35 @@ namespace SolidEdge.Part.Variables
             System.IO.File.WriteAllText(path, output);
         }
 
-        public static VariableObject readFile(string path)
+        public static VariableObject ReadFile(string path)
         {
             string input = System.IO.File.ReadAllText(path);
             var variable = JsonConvert.DeserializeObject<VariableObject>(input);
             return variable;
         }
 
+        public static dynamic FindVariableByName(VariableList variableList, string name)
+        {
+            dynamic variable = null;
+            dynamic variableListItem = null;
+
+            for (int i = 1; i <= variableList.Count; i++)
+            {
+                variableListItem = variableList.Item(i);
+
+                if (variableListItem.VariableTableName == name)
+                {
+                    variable = variableListItem;
+                    break;
+                }
+            }
+            return variable;
+        }
+
         /// <summary>
         /// Connects to a running instance of Solid Edge.
         /// </summary>
-        public static SolidEdgeFramework.Application ConnectToSolidEdge()
+            public static SolidEdgeFramework.Application ConnectToSolidEdge()
         {
             return ConnectToSolidEdge(false);
         }
